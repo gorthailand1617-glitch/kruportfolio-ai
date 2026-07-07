@@ -171,7 +171,8 @@ CREATE INDEX IF NOT EXISTS idx_evidence_embedding_hnsw
 
 -- View to calculate progress percentage (%) per teacher, per academic year, per dimension
 -- Completion is based on the presence of at least one 'verified' evidence point for each indicator.
-CREATE OR REPLACE VIEW public.view_dimension_progress AS
+CREATE OR REPLACE VIEW public.view_dimension_progress 
+WITH (security_invoker = true) AS
 WITH indicator_completion AS (
     -- Generates a grid of all portfolios and every system indicator
     SELECT 
