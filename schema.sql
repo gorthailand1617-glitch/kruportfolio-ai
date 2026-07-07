@@ -16,9 +16,13 @@ CREATE EXTENSION IF NOT EXISTS vector;
 -- ----------------------------------------------------------------------------
 -- 2. ENUMS & DOMAINS
 -- ----------------------------------------------------------------------------
-CREATE TYPE portfolio_status AS ENUM ('draft', 'submitted', 'under_review', 'completed');
-CREATE TYPE verification_status AS ENUM ('pending', 'verified', 'rejected');
-CREATE TYPE upload_source AS ENUM ('google_drive', 'direct_upload');
+DROP TYPE IF EXISTS public.portfolio_status CASCADE;
+DROP TYPE IF EXISTS public.verification_status CASCADE;
+DROP TYPE IF EXISTS public.upload_source CASCADE;
+
+CREATE TYPE public.portfolio_status AS ENUM ('draft', 'submitted', 'under_review', 'completed');
+CREATE TYPE public.verification_status AS ENUM ('pending', 'verified', 'rejected');
+CREATE TYPE public.upload_source AS ENUM ('google_drive', 'direct_upload');
 
 -- ----------------------------------------------------------------------------
 -- 3. TABLES DEFINITION
