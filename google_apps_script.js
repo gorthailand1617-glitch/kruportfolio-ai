@@ -12,7 +12,7 @@
 // CONFIGURATION SETTINGS
 // ==========================================
 const ROOT_FOLDER_ID = 'YOUR_GOOGLE_DRIVE_FOLDER_ID_HERE'; 
-const BACKEND_URL = 'https://<your-supabase-project>.supabase.co/functions/v1/drive-webhook';
+const BACKEND_URL = 'https://kruportfolio-e6a7srlns-gors-projects-fcf77064.vercel.app/api/drive-webhook';
 const SECRET_TOKEN = 'your-secure-shared-secret-token-here';
 const USER_ID = 'supabase-teacher-uuid-here'; // The teacher profile ID this folder maps to
 
