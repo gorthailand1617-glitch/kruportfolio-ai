@@ -14,15 +14,27 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS vector;
 
 -- ----------------------------------------------------------------------------
--- 2. ENUMS & DOMAINS
+-- 2. RESET SCHEMA & ENUMS (Allows clean re-runs)
 -- ----------------------------------------------------------------------------
+DROP VIEW IF EXISTS public.view_dimension_progress CASCADE;
+DROP TABLE IF EXISTS public.evidence_indicator_mapping CASCADE;
+DROP TABLE IF EXISTS public.evidence CASCADE;
+DROP TABLE IF EXISTS public.processing_job CASCADE;
+DROP TABLE IF EXISTS public.portfolio CASCADE;
+DROP TABLE IF EXISTS public.indicator CASCADE;
+DROP TABLE IF EXISTS public.evaluation_dimension CASCADE;
+DROP TABLE IF EXISTS public.academic_year CASCADE;
+DROP TABLE IF EXISTS public.teacher_profile CASCADE;
+
 DROP TYPE IF EXISTS public.portfolio_status CASCADE;
 DROP TYPE IF EXISTS public.verification_status CASCADE;
 DROP TYPE IF EXISTS public.upload_source CASCADE;
+DROP TYPE IF EXISTS public.job_status CASCADE;
 
 CREATE TYPE public.portfolio_status AS ENUM ('draft', 'submitted', 'under_review', 'completed');
 CREATE TYPE public.verification_status AS ENUM ('pending', 'verified', 'rejected');
 CREATE TYPE public.upload_source AS ENUM ('google_drive', 'direct_upload');
+CREATE TYPE public.job_status AS ENUM ('queued', 'downloading', 'extracting', 'analyzing', 'completed', 'failed');
 
 -- ----------------------------------------------------------------------------
 -- 3. TABLES DEFINITION
@@ -130,6 +142,20 @@ CREATE TABLE public.evidence_indicator_mapping (
     PRIMARY KEY (evidence_id, indicator_id)
 );
 
+-- Table: processing_job
+-- Background job tracking for asynchronous Google Drive file processing
+CREATE TABLE public.processing_job (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES public.teacher_profile(id) ON DELETE CASCADE,
+    file_id VARCHAR(255) NOT NULL,
+    resource_uri TEXT NOT NULL,
+    status job_status NOT NULL DEFAULT 'queued',
+    retry_count INTEGER NOT NULL DEFAULT 0,
+    error_log TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- ----------------------------------------------------------------------------
 -- 4. PERFORMANCE & VECTOR INDEXES
 -- ----------------------------------------------------------------------------
@@ -219,6 +245,17 @@ ALTER TABLE public.teacher_profile ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.portfolio ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.evidence ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.evidence_indicator_mapping ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.processing_job ENABLE ROW LEVEL SECURITY;
+
+-- processing_job RLS Policies
+CREATE POLICY "Allow users to read their own processing jobs"
+    ON public.processing_job FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Allow users to manage their own processing jobs"
+    ON public.processing_job FOR ALL
+    USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
 
 -- teacher_profile RLS Policies
 CREATE POLICY "Allow individual read access to profile"
